@@ -76,6 +76,7 @@ export default function Grid({
   const height = rows * cellSize + rows + 1;
   const [guesses, setGuesses] = React.useState<GuessGrid>(guessGrid);
   const debouncedGuesses: GuessGrid = useDebounce<GuessGrid>(guesses, 1000);
+  const [keyword ,setKeyword] =  React.useState("")
 
   React.useEffect(() => {
     // only update local storage after debounce delay
@@ -93,6 +94,7 @@ export default function Grid({
   };
 
   const cellFocus = (pos: CellPosition, clueId: string) => {
+    console.log("focussss:",keyword)
     if (onCellFocus !== undefined) {
       onCellFocus({
         pos,
@@ -153,6 +155,7 @@ export default function Grid({
   };
 
   const moveNext = () => {
+    setKeyword("")
     if (selectedClue === undefined || selectedCell === undefined) {
       return;
     }
@@ -287,6 +290,7 @@ export default function Grid({
         'ArrowDown',
         'ArrowLeft',
         'ArrowRight',
+        'Enter',
         'Backspace',
         'Delete',
         'Tab',
@@ -306,6 +310,10 @@ export default function Grid({
     ) {
       // move to the next cell
       moveDirection(event.key.replace('Arrow', ''));
+    } else if(['Enter'].includes(event.key)){
+      if (event.keyCode === 13) {
+        setKeyword("")
+      }
     } else if (['Backspace', 'Delete'].includes(event.key)) {
       cellChange(selectedCell, undefined);
 
@@ -365,9 +373,9 @@ export default function Grid({
       return;
     }
 
-    const key = event.target.value.toUpperCase();
-
-    if (isValidChar(key)) {
+    setKeyword(event.target.value)
+    const key = event.target.value
+    if (isValidChar(key, 0)) {
       cellChange(selectedCell, key as Char);
 
       const updatedCell: Cell = {
@@ -391,10 +399,12 @@ export default function Grid({
       });
 
       moveNext();
-
       updateGuesses(updatedCells);
+    } else if(isValidChar(key, 1)) {
+      event.preventDefault();
     } else {
       // prevent keys scrolling page
+      setKeyword("")
       event.preventDefault();
     }
   };
@@ -477,7 +487,7 @@ export default function Grid({
               ref={inputRef}
               spellCheck="false"
               type="text"
-              value=""
+              value={keyword}
             />
           </foreignObject>
         </svg>
